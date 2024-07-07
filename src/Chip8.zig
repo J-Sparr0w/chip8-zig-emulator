@@ -92,8 +92,6 @@ pub const Chip8 = struct {
         //Fetch instruction (2 bytes from memory)
         self.opcode = std.math.shl(u16, self.memory[self.pc], 8) | self.memory[self.pc + 1];
 
-        std.debug.print("\nopcode: {X}", .{self.opcode});
-
         //Increment PC before execution
         self.pc += 2;
 
@@ -110,15 +108,12 @@ pub const Chip8 = struct {
     }
 
     inline fn decode(self: *Self) void {
-        // std.debug.print("\n\ndecoding began: opcode =  {X} \n", .{self.opcode});
-
         const msb_opcode = self.opcode & 0xF000;
-        // std.debug.print("\n: msb_opcode =  {X} \n", .{msb_opcode});
         switch (msb_opcode) {
             0x0 => {
                 switch (self.opcode) {
-                    0x0 => self.op_cls(),
-                    0xE => self.op_ret(),
+                    0xE0 => self.op_cls(),
+                    0xEE => self.op_ret(),
                     else => self.OP_NULL(),
                 }
             },
@@ -373,6 +368,7 @@ pub const Chip8 = struct {
     inline fn op_jumpToAddr(self: *Self) void {
         const addr = self.opcode & 0x0FFF;
         self.pc = self.registers[0] + addr;
+        std.debug.print("\n\tNext PC: {}", .{self.pc});
     }
 
     //RND Vx, byte: Cxkk. Set Vx = random byte AND Vx
@@ -389,20 +385,15 @@ pub const Chip8 = struct {
         const vy = std.math.shr(u16, self.opcode & 0x00F0, 4);
         const height = self.opcode & 0x000F;
 
-        // std.debug.print("\nopcode: {X}", .{self.opcode});
-        // std.debug.print("\nregisters: {}\n", .{std.fmt.fmtSliceHexUpper(&self.registers)});
+        // std.debug.print("\nGoing to draw => {}, op: {X}, memory[pc]: {X}{X}", .{ std.fmt.fmtSliceHexUpper(self.memory[self.index_register..(self.index_register + height)]), self.opcode, self.memory[self.pc], self.memory[self.pc + 1] });
 
         //wrap if it goes beyond screen
         var xPos = self.registers[vx] % VIDEO_WIDTH;
         var yPos = self.registers[vy] % VIDEO_HEIGHT;
 
-        std.debug.print("\n\tx: {}\n\tvx=> {}", .{ xPos, self.registers[vx] });
-        std.debug.print("\n\ty: {}\n\tvy=> {}", .{ yPos, self.registers[vy] });
-
         // Vf is used as collision flag
         self.registers[0xf] = 0;
 
-        // std.debug.print("\n", .{});
         for (0..height) |row| {
             const spriteByte: u8 = self.memory[self.index_register + row];
 
@@ -410,18 +401,13 @@ pub const Chip8 = struct {
                 const sprite_pixel: u8 = spriteByte & std.math.shr(u8, 0x80, col);
                 const screen_pixel: *u32 = &self.video[(yPos + row) * VIDEO_WIDTH + (xPos + col)];
 
-                // std.debug.print("\npixel: {}\nsprite_pixel: {}\n", .{ screen_pixel.*, sprite_pixel });
-
                 if (sprite_pixel > 0) {
                     if (screen_pixel.* == 0xFFFFFFFF) {
-                        // std.debug.print("1", .{});
                         self.registers[0xf] = 1;
                     }
-                    // std.debug.print("0", .{});
                     screen_pixel.* ^= 0xFFFFFFFF;
                 }
             }
-            // std.debug.print("\n", .{});
         }
     }
 
