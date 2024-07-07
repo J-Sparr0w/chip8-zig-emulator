@@ -414,6 +414,7 @@ pub const Chip8 = struct {
     //SKP Vx: Ex9E. Skip next instruction if key with the value registers[vx] is pressed.
     inline fn op_skipIfVxPressed(self: *Self) void {
         const vx = std.math.shr(u16, self.opcode & 0x0F00, 8);
+        // std.debug.print("\n\t!skip if {} is pressed, keys=> {}", .{ self.registers[vx], std.fmt.fmtSliceHexUpper(&self.keypad) });
         if (self.keypad[self.registers[vx]] > 0) {
             self.pc += 2;
         }
@@ -436,6 +437,9 @@ pub const Chip8 = struct {
     //LD Vx, K: Fx0A. Wait for a key press, store the value of the key in Vx.
     inline fn op_setVxK(self: *Self) void {
         const vx = std.math.shr(u16, self.opcode & 0x0F00, 8);
+
+        std.debug.print("\n\t!wait for keypress", .{});
+
         if (self.keypad[0] == 1) {
             self.registers[vx] = 0;
         } else if (self.keypad[1] == 1) {

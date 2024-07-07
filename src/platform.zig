@@ -50,10 +50,11 @@ pub const Platform = struct {
         var quit = false;
         var event: c.SDL_Event = undefined;
 
-        while (c.SDL_PollEvent(&event) != 0) {
+        while (c.SDL_PollEvent(&event) == 1) {
             switch (event.type) {
                 c.SDL_QUIT => quit = true,
                 c.SDL_KEYDOWN => {
+                    // std.debug.print("\nKEY DOWN EVENT: {}\n", .{event.key.keysym.sym});
                     switch (event.key.keysym.sym) {
                         c.SDLK_ESCAPE => quit = true,
                         c.SDLK_x => keys[0] = 1,
