@@ -1,0 +1,7 @@
+/chip-tests
+/SDL2
+/zig-cache
+/zig-out
+src/backup.zig
+src/hello_world.zig
+run.bat
